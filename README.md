@@ -119,7 +119,7 @@ Todas as técnicas foram desenvolvidas utilizando exclusivamente a biblioteca pa
   $$P(a_{opp}) = \frac{\exp(V_{opp}(a_{opp}) / \tau)}{\sum_{j} \exp(V_{opp}(a_{j}) / \tau)}$$
 * **Função de Recompensa ($R(s, a, s')$)**:
   Retorna ganhos imediatos baseados em captura de peças, promoção a Dama e variações no score posicional:
-  $$R(s, a, s') = 120 \times \text{Capturas} + 200 \times \text{Promoção} + 0.5 \times \Delta\text{Score}$$
+  $$R(s, a, s') = 120 \times \text{Capturas} + 200 \times \text{Promocao} + 0.5 \times \Delta \text{Score}$$
 * **Cálculo da Equação de Bellman (Value Iteration)**:
   A utilidade de cada ação é projetada recursivamente ao longo de um horizonte finito com fator de desconto $\gamma = 0.90$:
   $$Q(s, a) = R(s, a) + \gamma \sum_{s'} P(s' | s, a) V(s')$$
@@ -134,10 +134,10 @@ O algoritmo A* foi adaptado para a exploração em árvore de grafos de estados 
 * **Fila de Prioridade (Min-Heap)**: Implementação própria através da interface `container/heap` para gerenciar os nós abertos ordenados pela função de custo $f(n)$.
 * **Custo Real Acumulado $g(n)$**:
   Penaliza a profundidade da busca e bonifica movimentos táticos imediatos:
-  $$g(n) = \sum \text{custo\_transição} - 15 \times \text{Capturas}$$
+  $$g(n) = \sum \text{Custo de Transicao} - 15 \times \text{Capturas}$$
 * **Heurística Admissível $h(n)$**:
   Estima o déficit restante para atingir uma posição de vantagem dominante sobre o alvo de pontuação ($T$):
-  $$h(n) = \max(0, T - \text{Avaliação}(n))$$
+  $$h(n) = \max(0, T - \text{Avaliacao}(n))$$
 * **Função de Avaliação Total**:
   $$f(n) = g(n) + h(n)$$
 * **Garantia de Escolha**: O algoritmo rastreia o movimento inicial na raiz da árvore que pertence ao caminho com menor custo $f(n)$.
