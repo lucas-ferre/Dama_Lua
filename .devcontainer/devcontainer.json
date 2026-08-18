@@ -1,0 +1,17 @@
+{
+  "name": "Damas Go Codespace",
+  "image": "mcr.microsoft.com/devcontainers/go:1-1.22-bookworm",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "go.toolsManagement.autoUpdate": true,
+        "go.useLanguageServer": true
+      },
+      "extensions": [
+        "golang.Go"
+      ]
+    }
+  },
+  "postCreateCommand": "go version",
+  "remoteUser": "vscode"
+}

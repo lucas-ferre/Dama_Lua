@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  damas:
+    build: .
+    image: damas-go:latest
+    stdin_open: true
+    tty: true
