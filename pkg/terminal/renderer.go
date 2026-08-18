@@ -23,7 +23,7 @@ func (r *Renderer) RenderGame(
 	message string,
 ) string {
 	boardLines := r.renderBoardLines(b)
-	hudLines := r.renderHUDLines(b, history, aiName, aiEval, message)
+	hudLines := r.renderHUDLines(b, history, aiName, aiEval)
 
 	maxLines := len(boardLines)
 	if len(hudLines) > maxLines {
@@ -33,6 +33,11 @@ func (r *Renderer) RenderGame(
 	boardWidth := 0
 	if len(boardLines) > 0 {
 		boardWidth = VisibleLen(boardLines[0])
+	}
+
+	hudWidth := 0
+	if len(hudLines) > 0 {
+		hudWidth = VisibleLen(hudLines[0])
 	}
 
 	var sb strings.Builder
@@ -47,11 +52,22 @@ func (r *Renderer) RenderGame(
 		hLine := ""
 		if i < len(hudLines) {
 			hLine = hudLines[i]
+		} else {
+			hLine = strings.Repeat(" ", hudWidth)
 		}
 
 		sb.WriteString(bLine)
 		sb.WriteString("   ")
 		sb.WriteString(hLine)
+		sb.WriteString("\n")
+	}
+
+	if message != "" {
+		totalWidth := boardWidth + 3 + hudWidth
+		if totalWidth < 40 {
+			totalWidth = 60
+		}
+		sb.WriteString(r.renderStatusBanner(message, totalWidth))
 		sb.WriteString("\n")
 	}
 
@@ -131,7 +147,6 @@ func (r *Renderer) renderHUDLines(
 	history []string,
 	aiName string,
 	aiEval string,
-	message string,
 ) []string {
 	hud := NewTable()
 	hud.BorderStyle = UnicodeBorders
@@ -156,12 +171,12 @@ func (r *Renderer) renderHUDLines(
 	}
 
 	start := 0
-	if len(history) > 6 {
-		start = len(history) - 6
+	if len(history) > 4 {
+		start = len(history) - 4
 	}
 	histSlice := history[start:]
 	if len(histSlice) == 0 {
-		hud.AddRow("Historico", "(nenhuma jogada)")
+		hud.AddRow("Historico (4 ult.)", "(nenhuma jogada)")
 	} else {
 		for i, h := range histSlice {
 			idx := start + i + 1
@@ -169,10 +184,17 @@ func (r *Renderer) renderHUDLines(
 		}
 	}
 
-	if message != "" {
-		hud.AddRow("Status / Aviso", Colorize(FgYellow, message))
-	}
-
 	rendered := hud.Render()
 	return strings.Split(strings.TrimRight(rendered, "\n"), "\n")
+}
+
+func (r *Renderer) renderStatusBanner(message string, targetWidth int) string {
+	banner := NewTable()
+	banner.BorderStyle = UnicodeBorders
+	banner.Padding = 1
+
+	coloredMsg := Colorize(FgBrightYellow+Bold, "» "+message)
+	banner.AddRow(coloredMsg)
+
+	return strings.TrimRight(banner.Render(), "\n")
 }
