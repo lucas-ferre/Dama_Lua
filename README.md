@@ -1,13 +1,14 @@
-# Damas Go - Inteligência Artificial & Jogo de Damas no Terminal
+# Damas Go - Inteligência Artificial & Jogo de Damas (GUI & Terminal)
 
 [![Go Version](https://img.shields.io/badge/Go-1.22%2B-00ADD8?style=flat&logo=go)](https://golang.org)
+[![GUI Engine](https://img.shields.io/badge/GUI-Ebitengine%20v2-orange)](https://ebitengine.org)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat&logo=docker)](https://www.docker.com)
 [![GitHub Codespaces](https://img.shields.io/badge/Codespaces-Ready-blue?style=flat&logo=github)](https://github.com/features/codespaces)
 [![Tests](https://img.shields.io/badge/Tests-15%2F15%20Passed-brightgreen)](tests/)
 
-Sistema completo para jogo de Damas implementado em **Go (Golang)** puro, projetado para execução no terminal com interface rica em tabelas Unicode e suporte a múltiplos motores de **Inteligência Artificial** desenvolvidos do zero (**Processo de Decisão de Markov**, **Busca A\*** e **Hill Climbing com Reinicialização Aleatória**).
+Sistema completo para jogo de Damas implementado em **Go (Golang)** puro, oferecendo **Interface Gráfica 2D (Desktop)** com Ebitengine e **Interface de Terminal (CLI)** com tabelas Unicode. O projeto conta com múltiplos motores de **Inteligência Artificial** desenvolvidos do zero (**Processo de Decisão de Markov**, **Busca A\*** e **Hill Climbing com Reinicialização Aleatória**).
 
-O projeto conta com arquitetura modular, **zero dependências externas**, conformidade estrita com as **Regras Brasileiras de Damas**, matriz espacial configurável (**10x10** e **8x8**) e suporte nativo a contêineres **Docker** e **GitHub Codespaces**.
+O projeto conta com arquitetura modular, **zero dependências em C (100% Go)**, conformidade estrita com as **Regras Brasileiras de Damas**, escolha da cor das peças (**Brancas** ou **Pretas**), matriz espacial configurável (**10x10** e **8x8**) e suporte nativo a contêineres **Docker** e **GitHub Codespaces**.
 
 ---
 
@@ -15,17 +16,20 @@ O projeto conta com arquitetura modular, **zero dependências externas**, confor
 
 - [Visão Geral da Arquitetura](#visão-geral-da-arquitetura)
 - [Estrutura do Projeto](#estrutura-do-projeto)
+- [Interfaces Disponíveis (GUI Desktop & Terminal CLI)](#interfaces-disponíveis-gui-desktop--terminal-cli)
 - [Modelagem dos Algoritmos de Inteligência Artificial](#modelagem-dos-algoritmos-de-inteligência-artificial)
   - [1. Processo de Decisão de Markov (MDP)](#1-processo-de-decisão-de-markov-mdp)
   - [2. Busca A* (A-Star Tactical Search)](#2-busca-a-a-star-tactical-search)
   - [3. Hill Climbing com Reinicialização Aleatória](#3-hill-climbing-com-reinicialização-aleatória)
   - [4. Modo Híbrido Mestre](#4-modo-híbrido-mestre)
 - [Ferramentas e Bibliotecas Próprias](#ferramentas-e-bibliotecas-próprias)
+  - [Interface Gráfica 2D (Ebitengine)](#interface-gráfica-2d-ebitengine)
   - [Motor de Tabelas e Renderização de Terminal](#motor-de-tabelas-e-renderização-de-terminal)
   - [Parser de Notação Algébrica](#parser-de-notação-algébrica)
   - [Mecanismo de Validação de Regras](#mecanismo-de-validação-de-regras)
 - [Instalação e Execução](#instalação-e-execução)
-  - [Execução Nativa com Go](#execução-nativa-com-go)
+  - [Executando a Interface Gráfica (Desktop GUI)](#executando-a-interface-gráfica-desktop-gui)
+  - [Executando no Terminal (CLI)](#executando-no-terminal-cli)
   - [Execução via Docker no Windows (PowerShell)](#execução-via-docker-no-windows-powershell)
   - [Execução via Docker no Linux / macOS](#execução-via-docker-no-linux--macos)
   - [Execução no GitHub Codespaces](#execução-no-github-codespaces)
@@ -39,21 +43,22 @@ O projeto adota uma arquitetura em camadas com separação clara de responsabili
 
 ```mermaid
 graph TD
-    CLI[cmd/damas/main.go<br>Interface do Usuário & Game Loop] --> GameEngine[pkg/game<br>Regras, Tabuleiro & Notação]
-    CLI --> TerminalUI[pkg/terminal<br>Tabelas, HUD & Renderização ANSI]
-    CLI --> AIEngine[pkg/ai<br>Controlador de Bots & Modo Híbrido]
+    GUI[cmd/damas-gui/main.go<br>Interface Gráfica Desktop] --> GuiPackage[pkg/gui<br>Ebitengine 2D, Mouse, Menus & HUD]
+    CLI[cmd/damas/main.go<br>Interface de Terminal CLI] --> TermUI[pkg/terminal<br>Tabelas, HUD & Renderização ANSI]
     
-    AIEngine --> MDP[pkg/ai/mdp<br>Markov Decision Process]
-    AIEngine --> ASTAR[pkg/ai/astar<br>Busca A* com Min-Heap]
-    AIEngine --> HC[pkg/ai/hillclimbing<br>Hill Climbing com Random Restarts]
+    GuiPackage --> GameCore[pkg/game<br>Regras Brasileiras, Tabuleiro, Notação]
+    TermUI --> GameCore
+    
+    GuiPackage --> AICore[pkg/ai<br>Controlador de Bots & Modo Híbrido]
+    TermUI --> AICore
+    
+    AICore --> MDP[pkg/ai/mdp<br>Markov Decision Process]
+    AICore --> ASTAR[pkg/ai/astar<br>Busca A* com Min-Heap]
+    AICore --> HC[pkg/ai/hillclimbing<br>Hill Climbing com Random Restarts]
     
     MDP --> Eval[pkg/ai/evaluation<br>Função de Avaliação Heurística]
     ASTAR --> Eval
     HC --> Eval
-    
-    MDP --> GameEngine
-    ASTAR --> GameEngine
-    HC --> GameEngine
 ```
 
 ---
@@ -65,8 +70,10 @@ Damas_Go/
 ├── .devcontainer/
 │   └── devcontainer.json        # Configuração oficial para GitHub Codespaces
 ├── cmd/
-│   └── damas/
-│       └── main.go              # Ponto de entrada, menus interativos e loop do jogo
+│   ├── damas/
+│   │   └── main.go              # Executável do Jogo no Terminal (CLI)
+│   └── damas-gui/
+│       └── main.go              # Executável com Interface Gráfica (GUI Desktop)
 ├── pkg/
 │   ├── game/                    # Núcleo de domínio do jogo de damas
 │   │   ├── board.go             # Estado do tabuleiro, clonagem e aplicação de lances
@@ -75,6 +82,12 @@ Damas_Go/
 │   │   ├── piece.go             # Modelagem de peças (Peão/Dama, Brancas/Pretas)
 │   │   ├── position.go          # Coordenadas matriciais e conversões A1-J10
 │   │   └── rules.go             # Validador das Regras Brasileiras (Dama voadora e maioria)
+│   ├── gui/                     # Módulo de Interface Gráfica (Ebitengine)
+│   │   ├── app.go               # Controlador principal e loop ebiten.Game
+│   │   ├── board_view.go        # Renderização visual do tabuleiro e peças 2D
+│   │   ├── hud_view.go          # Painel lateral gráfico com estatísticas e histórico
+│   │   ├── menu_view.go         # Telas de menu interativo (tamanho, cor, IA, nível)
+│   │   └── drawing.go           # Primitivas gráficas vetoriais em Go puro
 │   ├── terminal/                # Biblioteca própria de interface de terminal
 │   │   ├── colors.go            # Gerenciamento de estilos e cores ANSI
 │   │   ├── renderer.go          # Renderização do tabuleiro e painel HUD lateral
@@ -100,9 +113,24 @@ Damas_Go/
 ├── Makefile                     # Atalhos de compilação, testes e execução
 ├── run.ps1                      # Script PowerShell para execução via Docker no Windows
 ├── run.sh                       # Script Bash para execução via Docker no Linux/macOS
-├── go.mod                       # Definição do módulo Go
+├── go.mod                       # Definição do módulo Go e dependências
 └── .gitignore                   # Regras de exclusão para o repositório Git
 ```
+
+---
+
+## Interfaces Disponíveis (GUI Desktop & Terminal CLI)
+
+1. **Interface Gráfica Desktop (GUI)**:
+   * Desenvolvida com **Ebitengine v2** em Go puro (sem necessidade de CGO ou bibliotecas C no Windows).
+   * Interação 100% via mouse (clique para selecionar peça, visualização dinâmica das casas válidas e das capturas obrigatórias).
+   * Painel lateral moderno com histórico das 4 últimas jogadas e avaliação em tempo real da IA.
+   * Execução assíncrona da IA (a interface nunca trava durante o cálculo).
+
+2. **Interface de Terminal (CLI)**:
+   * Desenvolvida com biblioteca própria de tabelas e formatação ANSI sem dependências externas.
+   * Entrada por notação algébrica no formato xadrez (ex: `E3 para F4`, `C3 D4`, `E3:G5`).
+   * Painel lateral HUD e caixa de avisos dedicados.
 
 ---
 
@@ -164,39 +192,28 @@ O bot Híbrido atua como uma engine integrada:
 
 ---
 
-## Ferramentas e Bibliotecas Próprias
+## Instalação e Execução
 
-### Motor de Tabelas e Renderização de Terminal
-* Módulo [`pkg/terminal/table.go`](file:///pkg/terminal/table.go): Criação de tabelas com suporte a títulos centralizados, cabeçalhos, alinhamentos (Esquerda, Centro, Direita) e molduras Unicode duplas (`╔╦╗`, `╠╬╣`, `╚╩╝`) ou simples (`┌┬┐`, `├┼┤`, `└┴┘`).
-* Função `VisibleLen`: Remove sequências de escape ANSI via Regex para calcular com precisão a largura de caracteres renderizados na tela, evitando distorções visuais.
-* Módulo [`pkg/terminal/renderer.go`](file:///pkg/terminal/renderer.go): Renderiza simultaneamente o tabuleiro com contraste de casas claras/escuras e um painel HUD lateral com histórico e métricas em tempo real.
+### Executando a Interface Gráfica (Desktop GUI)
 
-### Parser de Notação Algébrica
-* Módulo [`pkg/game/notation.go`](file:///pkg/game/notation.go): Reconhece múltiplos formatos de digitação:
-  * Formato natural: `E3 para F4`, `E3 to F4`
-  * Formato espaço / hífen: `C3 D4`, `C3-D4`
-  * Formato de captura / salto em cadeia: `E3:G5`, `C3:E5:G7`
-  * Valida se a jogada respeita a **Lei da Maioria** e as regras do jogo.
+```bash
+# Executar diretamente
+go run ./cmd/damas-gui
 
-### Mecanismo de Validação de Regras
-* Módulo [`pkg/game/rules.go`](file:///pkg/game/rules.go):
-  * **Peças Comuns (Pedras)**: Andam 1 casa para frente; capturam para frente e para trás.
-  * **Damas Voadoras**: Movimentação por qualquer distância ao longo das 4 diagonais; captura à distância com múltiplos pontos de parada.
-  * **Lei da Maioria**: Identifica todas as linhas de captura possíveis e restringe as jogadas legais exclusivamente àquelas com o maior número de capturas.
+# Compilar o executável gráfico
+go build -o bin/damas-gui ./cmd/damas-gui
+./bin/damas-gui
+```
 
 ---
 
-## Instalação e Execução
-
-### Execução Nativa com Go
-
-Caso possua Go 1.22+ instalado:
+### Executando no Terminal (CLI)
 
 ```bash
 # Executar diretamente
 go run ./cmd/damas
 
-# Compilar o binário
+# Compilar o executável de terminal
 go build -o bin/damas ./cmd/damas
 ./bin/damas
 ```
@@ -205,7 +222,7 @@ go build -o bin/damas ./cmd/damas
 
 ### Execução via Docker no Windows (PowerShell)
 
-O script automatizado compila a imagem e abre o jogo interativamente:
+O script automatizado compila a imagem e abre a versão de terminal interativamente:
 
 ```powershell
 .\run.ps1
@@ -231,7 +248,7 @@ docker compose run --rm damas
 1. Abra o repositório no GitHub.
 2. Clique no botão **Code** > aba **Codespaces** > **Create codespace on master**.
 3. O ambiente será inicializado automaticamente com Go pré-configurado via [devcontainer.json](file:///.devcontainer/devcontainer.json).
-4. No terminal do Codespace, execute:
+4. No terminal do Codespace, execute a versão de terminal:
    ```bash
    go run ./cmd/damas
    ```

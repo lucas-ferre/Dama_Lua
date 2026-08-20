@@ -1,10 +1,22 @@
-.PHONY: build run test docker-build docker-run docker-test clean
+.PHONY: build build-cli build-gui run run-cli run-gui test docker-build docker-run docker-test clean
 
-build:
+build: build-all
+
+build-cli:
 	go build -o bin/damas ./cmd/damas
 
-run:
+build-gui:
+	go build -o bin/damas-gui ./cmd/damas-gui
+
+build-all: build-cli build-gui
+
+run: run-gui
+
+run-cli:
 	go run ./cmd/damas
+
+run-gui:
+	go run ./cmd/damas-gui
 
 test:
 	go test -v ./...

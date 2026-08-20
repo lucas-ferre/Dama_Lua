@@ -21,6 +21,7 @@ func main() {
 		printBanner()
 
 		size := selectBoardSize(reader)
+		playerColor := selectPlayerColor(reader)
 		botType, difficulty := selectBotAndDifficulty(reader)
 
 		bot := ai.CreateBot(botType, difficulty)
@@ -40,18 +41,23 @@ func main() {
 
 			isOver, winner := rules.IsGameOver(board)
 			if isOver {
-				printGameOver(winner, board.Turn, size)
+				printGameOver(winner, playerColor)
 				break
 			}
 
-			if board.Turn == game.White {
-				legalMoves := rules.GetLegalMoves(board, game.White)
+			if board.Turn == playerColor {
+				legalMoves := rules.GetLegalMoves(board, playerColor)
 				if len(legalMoves) == 0 {
 					statusMessage = "Voce nao possui movimentos legais."
 					continue
 				}
 
-				fmt.Print(terminal.Colorize(terminal.FgBrightCyan+terminal.Bold, "\nSua vez (Brancas)! Digite sua jogada (ex: E3 para F4 ou C3 D4) [ou 'sair']: "))
+				colorName := "Brancas ●"
+				if playerColor == game.Black {
+					colorName = "Pretas ○"
+				}
+
+				fmt.Print(terminal.Colorize(terminal.FgBrightCyan+terminal.Bold, fmt.Sprintf("\nSua vez (%s)! Digite sua jogada (ex: E3 para F4 ou C3 D4) [ou 'sair']: ", colorName)))
 				input, err := reader.ReadString('\n')
 				if err != nil {
 					break
@@ -73,7 +79,12 @@ func main() {
 				history = append(history, fmt.Sprintf("Jogador: %s", moveFormatted))
 				board.ApplyMove(move)
 			} else {
-				fmt.Print(terminal.Colorize(terminal.FgBrightRed+terminal.Bold, "\nIA pensando... calculando melhor jogada..."))
+				aiColorName := "Brancas ●"
+				if playerColor == game.White {
+					aiColorName = "Pretas ○"
+				}
+
+				fmt.Print(terminal.Colorize(terminal.FgBrightRed+terminal.Bold, fmt.Sprintf("\nIA pensando (%s)... calculando melhor jogada...", aiColorName)))
 				time.Sleep(300 * time.Millisecond)
 
 				aiMove, aiEval := bot.SelectMove(board)
@@ -131,6 +142,29 @@ func selectBoardSize(r *bufio.Reader) int {
 		}
 		if input == "2" {
 			return 8
+		}
+		fmt.Println("Opcao invalida. Tente novamente.")
+	}
+}
+
+func selectPlayerColor(r *bufio.Reader) game.Color {
+	menu := terminal.NewTable()
+	menu.BorderStyle = terminal.UnicodeBorders
+	menu.SetTitle(" ESCOLHA SUA COR ")
+	menu.SetHeaders("OPCAO", "COR", "CONDICAO DE INICIO")
+	menu.AddRow("1", "Brancas (●)", "Voce joga primeiro [Padrao]")
+	menu.AddRow("2", "Pretas (○)", "A IA joga primeiro")
+	fmt.Println(menu.Render())
+
+	for {
+		fmt.Print("Escolha a sua cor [1-2, padrao: 1]: ")
+		input, _ := r.ReadString('\n')
+		input = strings.TrimSpace(input)
+		if input == "" || input == "1" {
+			return game.White
+		}
+		if input == "2" {
+			return game.Black
 		}
 		fmt.Println("Opcao invalida. Tente novamente.")
 	}
@@ -202,14 +236,14 @@ func selectBotAndDifficulty(r *bufio.Reader) (ai.BotType, int) {
 	return chosenAI, difficulty
 }
 
-func printGameOver(winner game.Color, turn game.Color, size int) {
+func printGameOver(winner game.Color, playerColor game.Color) {
 	banner := terminal.NewTable()
 	banner.BorderStyle = terminal.UnicodeDoubleBorders
 	banner.SetTitle(" FIM DE JOGO ")
 
-	if winner == game.White {
+	if winner == playerColor {
 		banner.AddRow(terminal.Colorize(terminal.FgBrightGreen+terminal.Bold, "  PARABENS! VOCE VENCEU A PARTIDA!  "))
-	} else if winner == game.Black {
+	} else if winner == playerColor.Opponent() {
 		banner.AddRow(terminal.Colorize(terminal.FgBrightRed+terminal.Bold, "  VITORIA DA INTELIGENCIA ARTIFICIAL!  "))
 	} else {
 		banner.AddRow(terminal.Colorize(terminal.FgBrightYellow+terminal.Bold, "  PARTIDA EMPATADA!  "))

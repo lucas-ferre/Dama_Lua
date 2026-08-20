@@ -191,7 +191,25 @@ O parser inteligente ([`pkg/game/notation.go`](file:///pkg/game/notation.go)) ac
 
 ## 4. Configurações de Jogo e Motores de IA
 
-Ao iniciar o jogo, o usuário é apresentado a menus interativos com opções de personalização:
+Ao iniciar o jogo (tanto na versão Gráfica quanto na versão de Terminal), o usuário é apresentado a menus interativos com opções de personalização:
+
+### Escolha da Cor das Peças (Quem Joga Primeiro)
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                          ESCOLHA SUA COR                               │
+├───────┬──────────────────────┬─────────────────────────────────────────┤
+│ OPCAO │ COR                  │ CONDICAO DE INICIO                      │
+├───────┼──────────────────────┼─────────────────────────────────────────┤
+│ 1     │ Brancas (●)          │ O jogador joga primeiro [Padrao]        │
+│ 2     │ Pretas (○)           │ A IA joga primeiro (com as Brancas)     │
+└───────┴──────────────────────┴─────────────────────────────────────────┘
+```
+
+* **Jogando de Brancas**: O jogador inicia a partida na base do tabuleiro e realiza a abertura inicial. A IA joga com as pretas.
+* **Jogando de Pretas**: A IA assume as peças brancas e realiza automaticamente o primeiro lance da partida. O jogador responde em seguida na base do tabuleiro com as peças pretas.
+
+---
 
 ### Seleção dos Motores de Inteligência Artificial
 
